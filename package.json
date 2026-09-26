@@ -1,0 +1,28 @@
+{
+  "name": "five-crowns-online",
+  "version": "1.0.0",
+  "description": "Play the Five Crowns card game online with friends",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mandjsteele/Games.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mandjsteele/Games/issues"
+  },
+  "homepage": "https://github.com/mandjsteele/Games#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
+}

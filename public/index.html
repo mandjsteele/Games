@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Five Crowns Online</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>👑 Five Crowns</h1>
+    <span id="room-label"></span>
+  </header>
+
+  <main>
+    <!-- Home: create or join -->
+    <section id="home" class="screen">
+      <div class="panel">
+        <label>Your name <input id="name" maxlength="20" autocomplete="nickname"></label>
+        <button id="create" class="primary">Create a new game</button>
+        <div class="or">or join a friend's game</div>
+        <div class="row">
+          <input id="code" placeholder="CODE" maxlength="4" autocapitalize="characters">
+          <button id="join">Join</button>
+        </div>
+        <details class="rules">
+          <summary>How to play</summary>
+          <ul>
+            <li>11 rounds. Round 1 deals 3 cards, round 11 deals 13.</li>
+            <li>The rank matching the number of cards dealt is wild (3s in round 1 … Kings in round 11). Jokers are always wild.</li>
+            <li>On your turn draw from the deck or discard pile, then discard one card.</li>
+            <li>Go out when every remaining card is in a <b>book</b> (3+ of the same rank) or a <b>run</b> (3+ in a row, same suit).</li>
+            <li>After someone goes out, everyone else gets one last turn. Cards you can't meld count against you: face value, J=11, Q=12, K=13, wilds 20, Jokers 50.</li>
+            <li>Lowest total after 11 rounds wins.</li>
+          </ul>
+        </details>
+      </div>
+    </section>
+
+    <!-- Lobby -->
+    <section id="lobby" class="screen hidden">
+      <div class="panel">
+        <p>Share this code with friends:</p>
+        <div id="lobby-code" class="big-code"></div>
+        <button id="copy-link">Copy invite link</button>
+        <h3>Players</h3>
+        <ul id="lobby-players"></ul>
+        <button id="start" class="primary">Start game</button>
+        <p id="lobby-wait" class="muted">Waiting for the host to start…</p>
+      </div>
+    </section>
+
+    <!-- Table -->
+    <section id="table" class="screen hidden">
+      <div id="status"></div>
+      <div id="opponents"></div>
+      <div id="center">
+        <div class="pile">
+          <div id="deck" class="card back"><span id="deck-count"></span></div>
+          <small>Deck</small>
+        </div>
+        <div class="pile">
+          <div id="discard-pile"></div>
+          <small>Discard</small>
+        </div>
+      </div>
+      <div id="actions">
+        <button id="discard-btn">Discard</button>
+        <button id="goout-btn" class="primary">Go out 👑</button>
+        <button id="sort-btn">Sort</button>
+        <button id="hint-btn">Show melds</button>
+      </div>
+      <div id="hand"></div>
+      <div id="hint" class="hidden"></div>
+      <div id="round-over" class="hidden panel"></div>
+      <div class="bottom">
+        <div id="scoreboard"></div>
+        <ul id="log"></ul>
+      </div>
+    </section>
+    <div id="toast" class="hidden"></div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="melds.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
