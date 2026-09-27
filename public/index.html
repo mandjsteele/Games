@@ -9,7 +9,10 @@
 <body>
   <header>
     <h1>👑 Five Crowns</h1>
-    <span id="room-label"></span>
+    <div class="header-right">
+      <span id="room-label"></span>
+      <button id="sound-btn" title="Sound on/off"></button>
+    </div>
   </header>
 
   <main>
@@ -83,6 +86,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="melds.js"></script>
+  <script src="sounds.js"></script>
   <script src="client.js"></script>
 </body>
 </html>

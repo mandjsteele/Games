@@ -1,4 +1,4 @@
-/* global io, FiveCrowns */
+/* global io, FiveCrowns, Sounds */
 'use strict';
 
 const socket = io();
@@ -92,11 +92,40 @@ socket.on('joined', ({ code, token }) => {
 });
 
 socket.on('state', (s) => {
-  const prevRound = state && state.round;
+  const prev = state;
+  const prevRound = prev && prev.round;
   state = s;
   if (s.round !== prevRound) { handOrder = []; showHint = false; }
+  playSounds(prev, s);
   render();
 });
+
+// ---------- sounds ----------
+function isMyDrawTurn(s) {
+  return s && s.phase === 'playing' && s.turn === s.me && s.turnStep === 'draw';
+}
+
+function playSounds(prev, s) {
+  if (!prev) return; // don't play on the first update after (re)joining
+  const sameRound = prev.round === s.round;
+  const celebrating = sameRound && prev.wentOut === null && s.wentOut !== null;
+  if (celebrating) Sounds.celebrate();
+  if (isMyDrawTurn(s) && !isMyDrawTurn(prev)) {
+    // Let the fanfare finish before the turn ding.
+    if (celebrating) setTimeout(() => Sounds.ding(), 1600);
+    else Sounds.ding();
+  }
+}
+
+function renderSoundBtn() {
+  $('sound-btn').textContent = Sounds.muted ? '🔇' : '🔊';
+}
+$('sound-btn').onclick = () => {
+  Sounds.toggleMute();
+  renderSoundBtn();
+  if (!Sounds.muted) Sounds.ding();
+};
+renderSoundBtn();
 
 // ---------- lobby ----------
 $('start').onclick = () => send('start');
