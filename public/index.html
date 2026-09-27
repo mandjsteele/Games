@@ -12,20 +12,8 @@
     <div class="header-right">
       <span id="room-label"></span>
       <button id="sound-btn" title="Sound on/off"></button>
-      <button id="voice-btn" title="Choose the announcer voice">🗣</button>
     </div>
   </header>
-
-  <div id="voice-panel" class="hidden">
-    <label>Announcer voice
-      <select id="voice-select"></select>
-    </label>
-    <div class="row">
-      <button id="voice-test" class="primary">▶ Test</button>
-      <button id="voice-close">Done</button>
-    </div>
-    <p class="muted">Voices come from your phone. Try a few and pick the least robotic one.</p>
-  </div>
 
   <main>
     <!-- Home: create or join -->
@@ -99,7 +87,6 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="melds.js"></script>
   <script src="sounds.js"></script>
-  <script src="roast.js"></script>
   <script src="client.js"></script>
 </body>
 </html>

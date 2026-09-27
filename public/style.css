@@ -32,7 +32,6 @@ header {
 }
 header h1 { margin: 0; font-size: 1.3rem; color: var(--gold); }
 .header-right { display: flex; align-items: center; gap: 10px; }
-#voice-btn { padding: 4px 10px; font-size: 1.1rem; background: rgba(255, 255, 255, 0.15); border-color: transparent; color: #fff; }
 #sound-btn { padding: 4px 10px; font-size: 1.1rem; background: rgba(255, 255, 255, 0.15); border-color: transparent; color: #fff; }
 
 main { max-width: 1000px; margin: 0 auto; padding: 16px; }
@@ -209,10 +208,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 #toast {
   position: fixed;
-  top: 64px;
-  pointer-events: none; /* never block taps on the cards */
-  text-align: center;
-  z-index: 10;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   background: #222;
@@ -231,21 +227,3 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   .bottom { grid-template-columns: 1fr; }
   #center { gap: 24px; }
 }
-
-#voice-panel {
-  position: fixed;
-  top: 56px;
-  right: 12px;
-  left: 12px;
-  max-width: 420px;
-  margin-left: auto;
-  z-index: 20;
-  background: var(--panel);
-  color: var(--ink);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
-#voice-panel label { display: block; font-weight: 600; margin-bottom: 10px; }
-#voice-panel select { display: block; width: 100%; margin-top: 6px; font-size: 1rem; padding: 8px; border-radius: 8px; }
-#voice-panel .row button { flex: 1; }

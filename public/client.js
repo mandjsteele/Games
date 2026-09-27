@@ -1,4 +1,4 @@
-/* global io, FiveCrowns, Sounds, Roast */
+/* global io, FiveCrowns, Sounds */
 'use strict';
 
 const socket = io();
@@ -37,12 +37,12 @@ function cardEl(card, opts = {}) {
   return el;
 }
 
-function toast(msg, ms = 3000) {
+function toast(msg) {
   const t = $('toast');
   t.textContent = msg;
   t.classList.remove('hidden');
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => t.classList.add('hidden'), ms);
+  toast.timer = setTimeout(() => t.classList.add('hidden'), 3000);
 }
 
 function send(event, payload) {
@@ -110,18 +110,11 @@ function playSounds(prev, s) {
   if (!prev) return; // don't play on the first update after (re)joining
   const sameRound = prev.round === s.round;
   const celebrating = sameRound && prev.wentOut === null && s.wentOut !== null;
-  const myTurnNow = isMyDrawTurn(s) && !isMyDrawTurn(prev);
-  if (celebrating) {
-    // The substitute teacher announces who went out (the same line on every phone).
-    const line = Roast.goOutLine(s.players[s.wentOut].name, s.round);
-    toast(`📢 “${line}”`, 6000);
-    const spoken = Sounds.muted ? Promise.resolve(true) : Roast.say(line);
-    spoken.then((ok) => {
-      if (!ok) Sounds.celebrate(); // no speech on this device: play the fanfare instead
-      if (myTurnNow) setTimeout(() => Sounds.ding(), ok ? 300 : 2700);
-    });
-  } else if (myTurnNow) {
-    Sounds.ding();
+  if (celebrating) Sounds.celebrate();
+  if (isMyDrawTurn(s) && !isMyDrawTurn(prev)) {
+    // Let the fanfare finish before the turn ding.
+    if (celebrating) setTimeout(() => Sounds.ding(), 2700);
+    else Sounds.ding();
   }
 }
 
@@ -148,30 +141,6 @@ $('sound-btn').onclick = async () => {
   else if (result !== 'blocked') toast(`Your browser couldn't play sound (${result}).`);
 };
 renderSoundBtn();
-
-// ---------- announcer voice ----------
-function fillVoices() {
-  const sel = $('voice-select');
-  const list = Roast.voices();
-  const current = Roast.voice && Roast.voice.voiceURI;
-  sel.innerHTML = list.length
-    ? list.map((v) => `<option value="${escapeHtml(v.voiceURI)}">${escapeHtml(v.name)} (${escapeHtml(v.lang)})</option>`).join('')
-    : '<option>No voices found on this device</option>';
-  if (current) sel.value = current;
-}
-$('voice-btn').onclick = () => {
-  fillVoices();
-  $('voice-panel').classList.toggle('hidden');
-};
-$('voice-select').onchange = () => Roast.setVoice($('voice-select').value);
-$('voice-test').onclick = () => {
-  const me = state && state.players[state.me];
-  const name = (me && me.name) || $('name').value || 'Aaron';
-  Roast.say(Roast.goOutLine(name, Date.now())).then((ok) => {
-    if (!ok) toast("This device can't speak. You'll hear the fanfare instead.");
-  });
-};
-$('voice-close').onclick = () => $('voice-panel').classList.add('hidden');
 
 // ---------- lobby ----------
 $('start').onclick = () => send('start');
