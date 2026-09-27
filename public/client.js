@@ -129,12 +129,16 @@ function updateTitle() {
 document.addEventListener('visibilitychange', updateTitle);
 
 function renderSoundBtn() {
-  $('sound-btn').textContent = Sounds.muted ? '🔇' : '🔊';
+  $('sound-btn').textContent = Sounds.muted ? '🔇 Sound off' : '🔊 Sound on';
 }
-$('sound-btn').onclick = () => {
+$('sound-btn').onclick = async () => {
   Sounds.toggleMute();
   renderSoundBtn();
-  if (!Sounds.muted) Sounds.ding();
+  if (Sounds.muted) return toast('🔇 Sound off. Tap again to turn it back on.');
+  // Play a test ding and say what happened, to help sort out silent phones.
+  const result = await Sounds.ding();
+  if (result === 'played') toast("🔔 Sound on! Can't hear the ding? Turn up your device's media volume.");
+  else if (result !== 'blocked') toast(`Your browser couldn't play sound (${result}).`);
 };
 renderSoundBtn();
 

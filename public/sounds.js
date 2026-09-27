@@ -5,7 +5,7 @@
 // Web Audio API (iPhones mute Web Audio when the ring/silent switch is on).
 const Sounds = (() => {
   const RATE = 22050;
-  let muted = localStorage.getItem('fivecrowns-muted') === '1';
+  let muted = localStorage.getItem('fivecrowns-sound') === 'off';
   let unlocked = false;
   const player = new Audio();
   player.preload = 'auto';
@@ -66,23 +66,57 @@ const Sounds = (() => {
   }
 
   let onBlocked = () => {};
+  // Resolves to 'played', 'muted', 'blocked' (page not tapped yet) or an error name.
   function play(name) {
-    if (muted) return;
+    if (muted) return Promise.resolve('muted');
     player.src = clips[name];
     player.currentTime = 0;
-    player.play().then(() => { unlocked = true; }).catch((err) => {
-      if (err && err.name === 'NotAllowedError') onBlocked();
+    return player.play().then(() => {
+      unlocked = true;
+      return 'played';
+    }).catch((err) => {
+      const reason = (err && err.name) || 'error';
+      if (reason === 'NotAllowedError') {
+        onBlocked();
+        return 'blocked';
+      }
+      if (reason === 'AbortError') return 'played'; // interrupted by the next sound
+      return fallback(name) ? 'played' : reason;
     });
+  }
+
+  // Backup player using the Web Audio API, in case the <audio> element fails.
+  let ctx = null;
+  function fallback(name) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return false;
+      ctx = ctx || new AudioCtx();
+      ctx.resume();
+      fetch(clips[name])
+        .then((r) => r.arrayBuffer())
+        .then((b) => ctx.decodeAudioData(b))
+        .then((buf) => {
+          const src = ctx.createBufferSource();
+          src.buffer = buf;
+          src.connect(ctx.destination);
+          src.start();
+        })
+        .catch(() => {});
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   return {
     ding() {
-      play('ding');
-      if (navigator.vibrate) navigator.vibrate(150);
+      if (!muted && navigator.vibrate) navigator.vibrate(150);
+      return play('ding');
     },
     celebrate() {
-      play('celebrate');
-      if (navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
+      if (!muted && navigator.vibrate) navigator.vibrate([100, 60, 100, 60, 250]);
+      return play('celebrate');
     },
     // Called when the browser refuses to play (the page hasn't been tapped yet).
     set onBlocked(fn) {
@@ -93,7 +127,7 @@ const Sounds = (() => {
     },
     toggleMute() {
       muted = !muted;
-      localStorage.setItem('fivecrowns-muted', muted ? '1' : '0');
+      localStorage.setItem('fivecrowns-sound', muted ? 'off' : 'on');
       return muted;
     },
   };

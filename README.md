@@ -30,7 +30,7 @@ To play with people on other networks, deploy the server somewhere public (see b
 - **Sort** switches between sorting by suit and by rank. On desktop you can also drag cards to reorder them.
 - **Show melds** previews the best way to group your current hand and how many points it would leave.
 - Refreshing the page or losing your connection rejoins your seat automatically.
-- A ding plays when it's your turn, and a fanfare plays when someone goes out. Use the 🔊 button in the top corner to mute. (Browsers only allow sound after you've tapped or clicked the page once.)
+- A ding plays when it's your turn, and a fanfare plays when someone goes out. The **🔊 Sound on / 🔇 Sound off** button in the top corner toggles sound; turning it on plays a test ding. On Android, sound follows the *media* volume. (Browsers only allow sound after you've tapped or clicked the page once.)
 
 ## Deploying
 
