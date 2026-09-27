@@ -208,7 +208,10 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 #toast {
   position: fixed;
-  bottom: 24px;
+  top: 64px;
+  pointer-events: none; /* never block taps on the cards */
+  text-align: center;
+  z-index: 10;
   left: 50%;
   transform: translateX(-50%);
   background: #222;

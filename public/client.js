@@ -1,4 +1,4 @@
-/* global io, FiveCrowns, Sounds */
+/* global io, FiveCrowns, Sounds, Roast */
 'use strict';
 
 const socket = io();
@@ -37,12 +37,12 @@ function cardEl(card, opts = {}) {
   return el;
 }
 
-function toast(msg) {
+function toast(msg, ms = 3000) {
   const t = $('toast');
   t.textContent = msg;
   t.classList.remove('hidden');
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => t.classList.add('hidden'), 3000);
+  toast.timer = setTimeout(() => t.classList.add('hidden'), ms);
 }
 
 function send(event, payload) {
@@ -110,11 +110,18 @@ function playSounds(prev, s) {
   if (!prev) return; // don't play on the first update after (re)joining
   const sameRound = prev.round === s.round;
   const celebrating = sameRound && prev.wentOut === null && s.wentOut !== null;
-  if (celebrating) Sounds.celebrate();
-  if (isMyDrawTurn(s) && !isMyDrawTurn(prev)) {
-    // Let the fanfare finish before the turn ding.
-    if (celebrating) setTimeout(() => Sounds.ding(), 2700);
-    else Sounds.ding();
+  const myTurnNow = isMyDrawTurn(s) && !isMyDrawTurn(prev);
+  if (celebrating) {
+    // The substitute teacher announces who went out (the same line on every phone).
+    const line = Roast.goOutLine(s.players[s.wentOut].name, s.round);
+    toast(`📢 “${line}”`, 6000);
+    const spoken = Sounds.muted ? Promise.resolve(true) : Roast.say(line);
+    spoken.then((ok) => {
+      if (!ok) Sounds.celebrate(); // no speech on this device: play the fanfare instead
+      if (myTurnNow) setTimeout(() => Sounds.ding(), ok ? 300 : 2700);
+    });
+  } else if (myTurnNow) {
+    Sounds.ding();
   }
 }
 

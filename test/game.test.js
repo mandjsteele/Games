@@ -114,3 +114,19 @@ test('cannot go out with unmelded cards', () => {
   p.hand.push(c(13, 'spades'));
   assert.throws(() => g.discardCard(p.id, p.hand[0].id, true), /can't go out/);
 });
+
+test('substitute teacher mispronounces names and announces going out', () => {
+  const Roast = require('../public/roast.js');
+  assert.strictEqual(Roast.mispronounce('Aaron'), 'A-A-Ron');
+  assert.strictEqual(Roast.mispronounce('Denise'), 'Dee-Nice');
+  for (const name of ['Mike', 'Sue', 'Jo', 'Bob', 'Elizabeth', 'Grandma', 'X', 'Mary Ann', '😀', 'Al']) {
+    const n = Roast.mispronounce(name);
+    assert.ok(typeof n === 'string' && n.length > 0, name);
+  }
+  // Same line on every phone for the same player and round
+  const line = Roast.goOutLine('Blake', 4);
+  assert.strictEqual(line, Roast.goOutLine('Blake', 4));
+  assert.match(line, /went out/i);
+  assert.ok(line.includes(Roast.mispronounce('Blake')));
+  assert.strictEqual(Roast.forSpeech('A-A-Ron'), 'A. A. Ron');
+});
