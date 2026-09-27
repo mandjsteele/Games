@@ -60,59 +60,55 @@ const Roast = (() => {
 
   const fixEnd = (s) => s.replace(/ise$/, 'ice').replace(/ine$/, 'in').replace(/([^aeiou])y$/, '$1ee');
 
+  // Opening consonants a voice can actually say ("dr", "th"), used to tidy A-A-Ron style names.
+  const ONSETS = /^(?:[^aeiouy]|bl|br|ch|cl|cr|dr|fl|fr|gl|gr|pl|pr|sh|sl|st|th|tr)?[aeiouy]/;
+
   // Each style returns a display spelling, or null if it doesn't suit the name.
+  // Every style changes how the name SOUNDS, not just how it looks.
   const styles = {
-    // A-A-Ron: say the opening vowel as letters.
+    // A-A-Ron: say the opening vowel as a letter, twice.
     aaRon(word) {
       if (!isVowel(word[0]) || word[0] === 'y') return null;
-      const rest = word.replace(/^[aeiou]+/, '');
+      let rest = word.replace(/^[aeiou]+/, '');
+      while (rest.length > 2 && !ONSETS.test(rest)) rest = rest.slice(1); // Andrew -> Drew
       if (rest.length < 2 || !/[aeiouy]/.test(rest)) return null;
       const L = word[0].toUpperCase();
       return `${L}-${L}-${cap(fixEnd(rest))}`;
     },
-    // Dee-Nice: long first vowel, chopped into syllables.
+    // Matt-Hew / Step-Hen / Heat-Her: read "th", "ph", "ch", "sh" letter by letter.
+    literal(word) {
+      const m = /[tpcsg]h/.exec(word.slice(1));
+      if (!m) return null;
+      const at = m.index + 2; // index of the "h"
+      const left = word.slice(0, at);
+      let right = word.slice(at);
+      if (right.length > 1 && !isVowel(right[1])) return null; // Ashley -> skip
+      if (right.length === 1) right += 'ay'; // Joseph -> Josep-Hay
+      return `${cap(left)}-${cap(fixEnd(right))}`;
+    },
+    // Dee-Nice / Kay-Ren: long first vowel, chopped into syllables.
     deeNice(word) {
       if (isVowel(word[0])) return null;
       const syl = syllables(word);
       if (syl.length < 2) return null;
-      // Jac -> Jay, De -> Dee, Ke -> Kee
+      // Jac -> Jay, De -> Dee, Ka -> Kay
       const first = syl[0].replace(/([aeiouy])[aeiouy]*[^aeiouy]*$/, (m, v) => LONG[v]);
       return [first, ...syl.slice(1).map(fixEnd)].map(cap).join('-');
-    },
-    // Ti-MOTH-ee: stress the wrong syllable, hard.
-    wrongStress(word, rng) {
-      const syl = syllables(word);
-      if (syl.length < 2) return null;
-      const i = 1 + Math.floor(rng() * (syl.length - 1));
-      // Steal the next syllable's consonants: mo + thy -> MOTH + ee
-      if (i < syl.length - 1) {
-        const onset = syl[i + 1].match(/^[^aeiouy]+/);
-        if (onset && onset[0].length < syl[i + 1].length) {
-          syl[i] += onset[0];
-          syl[i + 1] = syl[i + 1].slice(onset[0].length);
-        }
-      }
-      // An open stressed syllable gets a long vowel: ni -> NYE
-      if (/[aeiouy]$/.test(syl[i]) && i < syl.length - 1) syl[i] = syl[i].replace(/([aeiouy])$/, (v) => (v === 'i' || v === 'y' ? 'ye' : LONG[v]));
-      return syl
-        .map((s, k) => (k === i ? fixEnd(s).toUpperCase() : cap(fixEnd(s))))
-        .map((s) => s.replace(/^Y$/, 'Ee'))
-        .join('-');
     },
     // Balakay: pull the opening consonants apart and finish with "-ay".
     balakay(word) {
       if (!CLUSTER.test(word)) return null;
       let w = word.replace(CLUSTER, (c) => `${c.slice(0, -1)}a${c.slice(-1)}`);
       w = w.replace(/([^aeiouy])e$/, '$1ay').replace(/([^aeiouy])$/, '$1ay');
-      return cap(w.replace(/kay$/, 'kay'));
+      return cap(w);
     },
-    // Mi-KAY: one-syllable names get split and stretched.
+    // Mat-Tay: one-syllable names get split and stretched.
     miKay(word) {
       if (syllables(word).length !== 1) return null;
       const m = word.match(/^(.*?[aeiouy]+)([^aeiouy]+)e?$/);
       if (!m) return null;
       const tail = m[2].slice(-1);
-      return `${cap(m[1] + m[2].slice(0, -1))}-${tail.toUpperCase()}AY`;
+      return `${cap(m[1] + m[2].slice(0, -1))}-${cap(tail)}ay`;
     },
     // Jay-Sue: when all else fails, add a confident prefix.
     prefix(word, rng) {
@@ -124,23 +120,23 @@ const Roast = (() => {
     const word = String(name).trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z]/g, '');
     if (word.length < 2) return String(name);
     const rng = seeded(word);
-    const aaRon = styles.aaRon(word);
-    if (aaRon) return aaRon; // the classic
-    const options = Object.keys(styles)
-      .filter((k) => k !== 'prefix')
-      .map((k) => styles[k](word, rng))
-      .filter((r) => r && r.replace(/-/g, '') !== cap(word));
-    return options.length ? pick(rng, options) : styles.prefix(word, rng);
+    // Best jokes first; the rest are backups.
+    for (const key of ['literal', 'aaRon', 'balakay', 'deeNice', 'miKay']) {
+      const r = styles[key](word, rng);
+      if (r) return r;
+    }
+    return styles.prefix(word, rng);
   }
 
+  // Plain words, said slowly, so they're easy to hear over a phone speaker.
   const LINES = [
-    (n) => `Is there a ${n}? ... ${n}. Just. Went. Out. Wonderful.`,
+    (n) => `Is there a ${n}? ... ${n} just went out. Wonderful.`,
     (n) => `Oh, look at that. ${n} just went out. Somebody give ${n} a gold star.`,
-    (n) => `${n} just went out. The rest of you? You done messed up.`,
-    (n) => `${n}! Just went out. Insubordinate. And churlish.`,
+    (n) => `${n} just went out. And the rest of you? You done messed up!`,
+    (n) => `${n} just went out. Say it right! ${n}!`,
     (n) => `Well, well, well. ${n} just went out. I am so... impressed.`,
-    (n) => `${n} just went out. Say it correctly: ${n}!`,
-    (n) => `Who is ${n}? ... ${n} just went out. Put that on your permanent record.`,
+    (n) => `Who is ${n}? ... ${n} just went out. That's going on your permanent record.`,
+    (n) => `${n} just went out. Unbelievable. Un. Believable.`,
   ];
 
   // Returns the text for the announcement; `seed` keeps every phone in sync.
@@ -157,15 +153,33 @@ const Roast = (() => {
       .replace(/-/g, ' ');
   }
 
+  // Voices: each player can pick their favourite; otherwise prefer a natural-
+  // sounding male English voice (Android: iol/iom/tpd, Chrome: "UK English Male",
+  // Windows/Edge: Guy, Andrew, Christopher, Davis...).
+  const MALE = /\bmale\b|iol|iom|tpd|guy|andrew|christopher|davis|david|daniel|fred|alex|arthur|james|george|ryan|eric|tom|aaron|rishi|lee/i;
+  const FEMALE = /female|iob|iog|tpc|tpf|sfg|samantha|victoria|karen|moira|tessa|zira|susan|aria|jenny/i;
+  const NICE = /natural|neural|network|enhanced|premium|online/i;
   let voice = null;
+
+  function voices() {
+    if (typeof speechSynthesis === 'undefined') return [];
+    return speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang));
+  }
+
+  function score(v) {
+    let s = 0;
+    if (MALE.test(v.name) && !FEMALE.test(v.name)) s += 4;
+    if (FEMALE.test(v.name)) s -= 4;
+    if (NICE.test(v.name) || NICE.test(v.voiceURI || '')) s += 2;
+    if (/en[-_]US/i.test(v.lang)) s += 1;
+    return s;
+  }
+
   function chooseVoice() {
-    if (typeof speechSynthesis === 'undefined') return;
-    const voices = speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang));
-    voice =
-      voices.find((v) => /male|david|daniel|fred|guy|james|george/i.test(v.name) && !/female/i.test(v.name)) ||
-      voices.find((v) => /en-US/i.test(v.lang)) ||
-      voices[0] ||
-      null;
+    const list = voices();
+    let saved = null;
+    try { saved = localStorage.getItem('fivecrowns-voice'); } catch {}
+    voice = list.find((v) => v.voiceURI === saved) || list.slice().sort((a, b) => score(b) - score(a))[0] || null;
   }
   if (typeof speechSynthesis !== 'undefined') {
     chooseVoice();
@@ -178,6 +192,11 @@ const Roast = (() => {
     window.addEventListener('click', unlock, true);
   }
 
+  function setVoice(uri) {
+    try { localStorage.setItem('fivecrowns-voice', uri); } catch {}
+    chooseVoice();
+  }
+
   // Speak the text; resolves false if this device can't talk.
   function say(text) {
     if (typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') {
@@ -186,17 +205,26 @@ const Roast = (() => {
     return new Promise((resolve) => {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(forSpeech(text));
-      if (voice) u.voice = voice;
-      u.rate = 0.9;
-      u.pitch = 0.7;
+      try {
+        if (voice) {
+          u.voice = voice;
+          u.lang = voice.lang;
+        }
+      } catch {} // fall back to the default voice
+      u.rate = 0.85;
+      u.pitch = 0.9; // lower pitch sounds more robotic on most phones
       u.onend = () => resolve(true);
       u.onerror = () => resolve(false);
       speechSynthesis.speak(u);
-      setTimeout(() => resolve(true), 8000); // don't wait forever
+      setTimeout(() => resolve(true), 10000); // don't wait forever
     });
   }
 
-  return { mispronounce, goOutLine, forSpeech, say };
+  return {
+    mispronounce, goOutLine, forSpeech, say, setVoice,
+    voices,
+    get voice() { return voice; },
+  };
 })();
 
 if (typeof module !== 'undefined') module.exports = Roast;

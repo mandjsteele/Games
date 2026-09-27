@@ -149,6 +149,30 @@ $('sound-btn').onclick = async () => {
 };
 renderSoundBtn();
 
+// ---------- announcer voice ----------
+function fillVoices() {
+  const sel = $('voice-select');
+  const list = Roast.voices();
+  const current = Roast.voice && Roast.voice.voiceURI;
+  sel.innerHTML = list.length
+    ? list.map((v) => `<option value="${escapeHtml(v.voiceURI)}">${escapeHtml(v.name)} (${escapeHtml(v.lang)})</option>`).join('')
+    : '<option>No voices found on this device</option>';
+  if (current) sel.value = current;
+}
+$('voice-btn').onclick = () => {
+  fillVoices();
+  $('voice-panel').classList.toggle('hidden');
+};
+$('voice-select').onchange = () => Roast.setVoice($('voice-select').value);
+$('voice-test').onclick = () => {
+  const me = state && state.players[state.me];
+  const name = (me && me.name) || $('name').value || 'Aaron';
+  Roast.say(Roast.goOutLine(name, Date.now())).then((ok) => {
+    if (!ok) toast("This device can't speak. You'll hear the fanfare instead.");
+  });
+};
+$('voice-close').onclick = () => $('voice-panel').classList.add('hidden');
+
 // ---------- lobby ----------
 $('start').onclick = () => send('start');
 $('copy-link').onclick = async () => {

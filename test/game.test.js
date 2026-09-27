@@ -119,6 +119,8 @@ test('substitute teacher mispronounces names and announces going out', () => {
   const Roast = require('../public/roast.js');
   assert.strictEqual(Roast.mispronounce('Aaron'), 'A-A-Ron');
   assert.strictEqual(Roast.mispronounce('Denise'), 'Dee-Nice');
+  assert.strictEqual(Roast.mispronounce('Matthew'), 'Matt-Hew');
+  assert.strictEqual(Roast.mispronounce('Stephen'), 'Step-Hen');
   for (const name of ['Mike', 'Sue', 'Jo', 'Bob', 'Elizabeth', 'Grandma', 'X', 'Mary Ann', '😀', 'Al']) {
     const n = Roast.mispronounce(name);
     assert.ok(typeof n === 'string' && n.length > 0, name);
