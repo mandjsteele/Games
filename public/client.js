@@ -97,6 +97,7 @@ socket.on('state', (s) => {
   state = s;
   if (s.round !== prevRound) { handOrder = []; showHint = false; }
   playSounds(prev, s);
+  updateTitle();
   render();
 });
 
@@ -116,6 +117,16 @@ function playSounds(prev, s) {
     else Sounds.ding();
   }
 }
+
+Sounds.onBlocked = () => toast('🔊 Tap anywhere on the page to turn on game sounds');
+
+// Show "Your turn" in the browser tab title while the game is in the background.
+const baseTitle = document.title;
+function updateTitle() {
+  const alert = state && isMyDrawTurn(state) && document.hidden;
+  document.title = alert ? '🔔 Your turn! — Five Crowns' : baseTitle;
+}
+document.addEventListener('visibilitychange', updateTitle);
 
 function renderSoundBtn() {
   $('sound-btn').textContent = Sounds.muted ? '🔇' : '🔊';
