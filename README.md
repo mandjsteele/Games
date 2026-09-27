@@ -30,7 +30,7 @@ To play with people on other networks, deploy the server somewhere public (see b
 - **Sort** switches between sorting by suit and by rank. On desktop you can also drag cards to reorder them.
 - **Show melds** previews the best way to group your current hand and how many points it would leave.
 - Refreshing the page or losing your connection rejoins your seat automatically.
-- A ding plays when it's your turn. When someone goes out, a sarcastic "substitute teacher" voice (a nod to Key & Peele) announces it, confidently mispronouncing their name ("A-A-Ron just went out!"). Devices without text-to-speech play a fanfare instead. Tap **🗣** to choose which of your phone's voices the announcer uses, with a **▶ Test** button. The **🔊 Sound on / 🔇 Sound off** button in the top corner toggles sound; turning it on plays a test ding. On Android, sound follows the *media* volume. (Browsers only allow sound after you've tapped or clicked the page once.)
+- A ding plays when it's your turn. When someone goes out, a voice announces it with a made-up mispronunciation of their name, a nod to Key & Peele's substitute teacher ("A-A-Ron just went out!"). Devices without text-to-speech play a fanfare instead. Tap **🗣** to choose which of your phone's voices the announcer uses, with a **▶ Test** button. The **🔊 Sound on / 🔇 Sound off** button in the top corner toggles sound; turning it on plays a test ding. On Android, sound follows the *media* volume. (Browsers only allow sound after you've tapped or clicked the page once.)
 
 ## Deploying
 

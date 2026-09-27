@@ -128,16 +128,8 @@ const Roast = (() => {
     return styles.prefix(word, rng);
   }
 
-  // Plain words, said slowly, so they're easy to hear over a phone speaker.
-  const LINES = [
-    (n) => `Is there a ${n}? ... ${n} just went out. Wonderful.`,
-    (n) => `Oh, look at that. ${n} just went out. Somebody give ${n} a gold star.`,
-    (n) => `${n} just went out. And the rest of you? You done messed up!`,
-    (n) => `${n} just went out. Say it right! ${n}!`,
-    (n) => `Well, well, well. ${n} just went out. I am so... impressed.`,
-    (n) => `Who is ${n}? ... ${n} just went out. That's going on your permanent record.`,
-    (n) => `${n} just went out. Unbelievable. Un. Believable.`,
-  ];
+  // Just the made-up name, no extra lines.
+  const LINES = [(n) => `${n} just went out!`];
 
   // Returns the text for the announcement; `seed` keeps every phone in sync.
   function goOutLine(name, seed = '') {
@@ -168,9 +160,11 @@ const Roast = (() => {
 
   function score(v) {
     let s = 0;
-    if (MALE.test(v.name) && !FEMALE.test(v.name)) s += 4;
-    if (FEMALE.test(v.name)) s -= 4;
-    if (NICE.test(v.name) || NICE.test(v.voiceURI || '')) s += 2;
+    // Natural-sounding (network/neural) voices matter most, then a male voice.
+    if (NICE.test(v.name) || NICE.test(v.voiceURI || '')) s += 4;
+    if (MALE.test(v.name) && !FEMALE.test(v.name)) s += 2;
+    if (FEMALE.test(v.name)) s -= 2;
+    if (v.localService === false) s += 1; // online voices are usually higher quality
     if (/en[-_]US/i.test(v.lang)) s += 1;
     return s;
   }
@@ -211,8 +205,9 @@ const Roast = (() => {
           u.lang = voice.lang;
         }
       } catch {} // fall back to the default voice
-      u.rate = 0.85;
-      u.pitch = 0.9; // lower pitch sounds more robotic on most phones
+      // The phone's normal speed and pitch sound the most natural.
+      u.rate = 1;
+      u.pitch = 1;
       u.onend = () => resolve(true);
       u.onerror = () => resolve(false);
       speechSynthesis.speak(u);
