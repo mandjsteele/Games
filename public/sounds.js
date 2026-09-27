@@ -10,22 +10,37 @@ const Sounds = (() => {
   const player = new Audio();
   player.preload = 'auto';
 
-  // Build a WAV clip from a list of notes: { f, start, dur, vol, shape }
+  // Waveforms: sine, triangle, brass (a bright trumpet-like tone) and clap (noise).
+  function sample(shape, f, t) {
+    const phase = (f * t) % 1;
+    if (shape === 'triangle') return 1 - 4 * Math.abs(phase - 0.5);
+    if (shape === 'clap') return Math.random() * 2 - 1;
+    if (shape === 'brass') {
+      let v = 0;
+      for (let k = 1; k <= 6; k++) v += Math.sin(2 * Math.PI * f * k * t) / k;
+      return v * 0.6;
+    }
+    return Math.sin(2 * Math.PI * phase);
+  }
+
+  // Build a WAV clip from a list of notes: { f, start, dur, vol, shape, hold }.
+  // Notes fade out by default; `hold` notes sustain and then release at the end.
   function makeClip(notes, length) {
     const n = Math.ceil(length * RATE);
     const data = new Float32Array(n);
-    for (const { f, start, dur, vol = 0.3, shape = 'sine' } of notes) {
+    for (const { f = 0, start, dur, vol = 0.3, shape = 'sine', hold = false } of notes) {
       const s0 = Math.floor(start * RATE);
       const len = Math.min(Math.floor(dur * RATE), n - s0);
       for (let i = 0; i < len; i++) {
         const t = i / RATE;
-        const phase = (f * t) % 1;
-        const wave = shape === 'triangle' ? 1 - 4 * Math.abs(phase - 0.5) : Math.sin(2 * Math.PI * phase);
-        const attack = Math.min(1, t / 0.01);
-        const decay = Math.exp((-5 * t) / dur);
-        data[s0 + i] += wave * vol * attack * decay;
+        const attack = Math.min(1, t / (hold ? 0.03 : 0.005));
+        const env = hold ? Math.min(1, (dur - t) / 0.2) : Math.exp((-5 * t) / dur);
+        data[s0 + i] += sample(shape, f, t) * vol * attack * env;
       }
     }
+    // Keep the mix from distorting.
+    const peak = data.reduce((m, x) => Math.max(m, Math.abs(x)), 0);
+    if (peak > 0.9) for (let i = 0; i < n; i++) data[i] *= 0.9 / peak;
     const buf = new ArrayBuffer(44 + n * 2);
     const v = new DataView(buf);
     const str = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
@@ -44,12 +59,24 @@ const Sounds = (() => {
       { f: 1319, start: 0, dur: 0.9, vol: 0.5 },
       { f: 2637, start: 0, dur: 0.5, vol: 0.12 },
     ], 1.0),
-    // Rising fanfare when someone goes out.
+    // Trumpet "ta-ta-ta-TAAA!" fanfare with applause when someone goes out.
     celebrate: makeClip([
-      ...[523, 659, 784, 1047].map((f, i) => ({ f, start: i * 0.12, dur: 0.35, vol: 0.3, shape: 'triangle' })),
-      ...[1047, 1319, 1568].map((f) => ({ f, start: 0.5, dur: 1.0, vol: 0.2, shape: 'triangle' })),
-    ], 1.6),
+      ...[0, 0.15, 0.3].map((start) => ({ f: 392, start, dur: 0.12, vol: 0.7, shape: 'brass', hold: true })),
+      ...[523, 659, 784].map((f) => ({ f, start: 0.45, dur: 1.2, vol: 0.22, shape: 'brass', hold: true })),
+      { f: 1047, start: 0.45, dur: 1.2, vol: 0.12, shape: 'brass', hold: true },
+      ...applause(0.5, 2.0),
+    ], 2.6),
   };
+
+  // Lots of short random claps that thin out towards the end.
+  function applause(start, dur) {
+    const claps = [];
+    for (let i = 0; i < 90; i++) {
+      const at = Math.random() * dur;
+      claps.push({ start: start + at, dur: 0.06, vol: 0.4 * (1 - 0.7 * at / dur), shape: 'clap' });
+    }
+    return claps;
+  }
 
   // Browsers only allow sound after the user taps the page, and Safari only
   // for the element that was played during that tap — so play a silent clip.

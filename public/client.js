@@ -113,7 +113,7 @@ function playSounds(prev, s) {
   if (celebrating) Sounds.celebrate();
   if (isMyDrawTurn(s) && !isMyDrawTurn(prev)) {
     // Let the fanfare finish before the turn ding.
-    if (celebrating) setTimeout(() => Sounds.ding(), 1600);
+    if (celebrating) setTimeout(() => Sounds.ding(), 2700);
     else Sounds.ding();
   }
 }
